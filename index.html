@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFS Fractal Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .control-section h3 {
+            margin-bottom: 12px;
+            color: #4dc9b0;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .fractals-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .fractals-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .fractals-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+
+        .fractals-list::-webkit-scrollbar-thumb {
+            background: rgba(77, 201, 176, 0.5);
+            border-radius: 3px;
+        }
+
+        .fractal-button {
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .fractal-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(3px);
+            border-color: rgba(77, 201, 176, 0.5);
+        }
+
+        .fractal-button.active {
+            background: rgba(77, 201, 176, 0.4);
+            border-color: #4dc9b0;
+            box-shadow: 0 0 15px rgba(77, 201, 176, 0.3);
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        .slider-container {
+            position: relative;
+        }
+
+        .slider-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .slider-wrapper input[type="range"] {
+            flex: 1;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4dc9b0;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(77, 201, 176, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 2px 12px rgba(77, 201, 176, 0.8);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4dc9b0;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(77, 201, 176, 0.5);
+        }
+
+        .slider-value {
+            display: inline-block;
+            padding: 3px 10px;
+            background: rgba(77, 201, 176, 0.2);
+            border-radius: 5px;
+            font-size: 12px;
+            color: #4dc9b0;
+            font-weight: bold;
+            min-width: 45px;
+            text-align: center;
+        }
+
+        .apply-button {
+            padding: 6px 14px;
+            background: linear-gradient(135deg, #4dc9b0, #45b7d1);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .apply-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(77, 201, 176, 0.4);
+        }
+
+        .apply-button:active {
+            transform: scale(0.95);
+        }
+
+        .color-palette-selector {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .palette-option {
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .palette-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .palette-option.active {
+            border-color: #4dc9b0;
+            background: rgba(77, 201, 176, 0.2);
+            box-shadow: 0 0 10px rgba(77, 201, 176, 0.3);
+        }
+
+        .palette-preview {
+            display: flex;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .palette-color {
+            width: 8px;
+            height: 20px;
+            border-radius: 2px;
+        }
+
+        .canvas-container {
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .progress-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .progress-overlay.active {
+            display: flex;
+        }
+
+        .progress-container {
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #4dc9b0;
+            font-weight: bold;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid rgba(77, 201, 176, 0.3);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4dc9b0, #45b7d1, #4dc9b0);
+            background-size: 200% 100%;
+            animation: progressGradient 2s ease infinite;
+            transition: width 0.3s ease;
+            border-radius: 13px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.3), 
+                transparent
+            );
+            animation: progressShine 1.5s ease-in-out infinite;
+        }
+
+        @keyframes progressGradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes progressShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+
+        .progress-percentage {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 24px;
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 2px 10px rgba(77, 201, 176, 0.5);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(77, 201, 176, 0.2);
+            border-top: 4px solid #4dc9b0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #4dc9b0;
+            border-radius: 10px;
+            padding: 15px 20px;
+            color: white;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.4s ease;
+            box-shadow: 0 8px 30px rgba(77, 201, 176, 0.3);
+            pointer-events: auto;
+        }
+
+        .toast.success {
+            border-color: #26de81;
+        }
+
+        .toast.success::before {
+            content: '✅';
+            font-size: 18px;
+        }
+
+        .toast.info {
+            border-color: #4dc9b0;
+        }
+
+        .toast.info::before {
+            content: 'ℹ️';
+            font-size: 18px;
+        }
+
+        .toast.error {
+            border-color: #ff6b6b;
+        }
+
+        .toast.error::before {
+            content: '❌';
+            font-size: 18px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .toast.removing {
+            animation: slideOut 0.4s ease;
+        }
+
+        #status {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #4dc9b0;
+            border: 1px solid rgba(77, 201, 176, 0.3);
+            z-index: 5;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+
+        .info-box {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #4dc9b0;
+        }
+
+        .info-box h3 {
+            margin-bottom: 10px;
+            color: #4dc9b0;
+        }
+
+        .info-box p {
+            line-height: 1.6;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .fractals-list {
+                max-height: 200px;
+            }
+
+            .toast-container {
+                top: auto;
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌀 IFS Fractal Generator</h1>
+        <p class="subtitle">Iterated Function System - Twierdzenie Banacha o punkcie stałym</p>
+        
+        <div class="main-content">
+            <div class="sidebar">
+                <!-- Fractal Selection -->
+                <div class="control-section">
+                    <h3>🎨 Wybierz fraktal</h3>
+                    <div class="fractals-list">
+                        <button class="fractal-button" data-key="1">Barnsley Fern</button>
+                        <button class="fractal-button" data-key="2">Sierpinski Gasket</button>
+                        <button class="fractal-button" data-key="3">Heighway Dragon</button>
+                        <button class="fractal-button" data-key="4">Crystal</button>
+                        <button class="fractal-button" data-key="5">Maple Leaf</button>
+                        <button class="fractal-button" data-key="6">Sierpinski Carpet</button>
+                        <button class="fractal-button" data-key="7">Levy Dragon</button>
+                        <button class="fractal-button" data-key="9">Koch Curve</button>
+                        <button class="fractal-button" data-key="10">Sierpinski Pentagon</button>
+                        <button class="fractal-button" data-key="11">McWorter's Pentigree</button>
+                        <button class="fractal-button" data-key="12">Symmetric Binary Tree</button>
+                        <button class="fractal-button" data-key="13">Koch Snowflake</button>
+                        <button class="fractal-button" data-key="14">Terdragon</button>
+                        <button class="fractal-button" data-key="15">Twin Dragon</button>
+                        <button class="fractal-button" data-key="16">Spiral</button>
+                        <button class="fractal-button" data-key="17" data-name="Pythagorean Tree (Recursive)">Pythagorean Tree (Recursive)</button>
+                        <button class="fractal-button" data-key="8">Pythagorean Tree</button>
+                    </div>
+                </div>
+
+                <!-- Points Control -->
+                <div class="control-section">
+                    <h3>⚙️ Parametry</h3>
+                    <div class="control-group">
+                        <label>Liczba punktów:</label>
+                        <div class="slider-wrapper">
+                            <input type="range" id="pointsSlider" min="10000" max="500000" step="10000" value="100000">
+                            <span class="slider-value" id="pointsValue">100k</span>
+                        </div>
+                        <button class="apply-button" id="applyButton">Zastosuj</button>
+                    </div>
+                </div>
+
+                <!-- Color Palette -->
+                <div class="control-section">
+                    <h3>🎨 Paleta kolorów</h3>
+                    <div class="color-palette-selector">
+                        <div class="palette-option active" data-palette="vibrant">
+                            <div class="palette-preview">
+                                <div class="palette-color" style="background: #FF6B6B;"></div>
+                                <div class="palette-color" style="background: #4ECDC4;"></div>
+                                <div class="palette-color" style="background: #45B7D1;"></div>
+                            </div>
+                            <span>Vibrant</span>
+                        </div>
+                        <div class="palette-option" data-palette="cool">
+                            <div class="palette-preview">
+                                <div class="palette-color" style="background: #667eea;"></div>
+                                <div class="palette-color" style="background: #764ba2;"></div>
+                                <div class="palette-color" style="background: #f093fb;"></div>
+                            </div>
+                            <span>Cool</span>
+                        </div>
+                        <div class="palette-option" data-palette="fire">
+                            <div class="palette-preview">
+                                <div class="palette-color" style="background: #ff0844;"></div>
+                                <div class="palette-color" style="background: #ffb199;"></div>
+                                <div class="palette-color" style="background: #ff9a00;"></div>
+                            </div>
+                            <span>Fire</span>
+                        </div>
+                        <div class="palette-option" data-palette="ocean">
+                            <div class="palette-preview">
+                                <div class="palette-color" style="background: #2E3192;"></div>
+                                <div class="palette-color" style="background: #1BFFFF;"></div>
+                                <div class="palette-color" style="background: #00CED1;"></div>
+                            </div>
+                            <span>Ocean</span>
+                        </div>
+                        <div class="palette-option" data-palette="sunset">
+                            <div class="palette-preview">
+                                <div class="palette-color" style="background: #ff6b6b;"></div>
+                                <div class="palette-color" style="background: #feca57;"></div>
+                                <div class="palette-color" style="background: #ee5a6f;"></div>
+                            </div>
+                            <span>Sunset</span>
+                        </div>
+                        <div class="palette-option" data-palette="forest">
+                            <div class="palette-preview">
+                                <div class="palette-color" style="background: #26de81;"></div>
+                                <div class="palette-color" style="background: #20bf6b;"></div>
+                                <div class="palette-color" style="background: #0fb9b1;"></div>
+                            </div>
+                            <span>Forest</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="canvas-container">
+                <canvas id="fractalCanvas" width="1000" height="800"></canvas>
+                <div id="status">Wybierz fraktal z menu</div>
+                
+                <!-- Progress Overlay -->
+                <div class="progress-overlay" id="progressOverlay">
+                    <div class="spinner"></div>
+                    <div class="progress-container">
+                        <div class="progress-text" id="progressText">Generowanie fraktalu...</div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-percentage" id="progressPercentage">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <script src="renderer.js"></script>
+</body>
+</html>

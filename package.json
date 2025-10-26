@@ -1,0 +1,19 @@
+{
+  "name": "fractal-generator-app",
+  "version": "1.0.0",
+  "description": "An IFS fractal generator using Electron and Python.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "Electron",
+    "Python",
+    "Fractals"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^38.4.0"
+  }
+}
